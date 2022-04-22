@@ -1,0 +1,58 @@
+version: "3.9"
+
+
+x-test: &pre
+  env_file: .env
+  image: alpine:latest
+  environment:
+    - foo=bar
+    - trololo=$foo
+  restart: always
+  depends_on:
+    - redis
+    - nginx
+
+services:
+
+  test:
+    <<: *pre
+    container_name: test
+    image: test:12345
+    build:
+      context: .
+      target: test
+      dockerfile: Dockerfile
+    restart: "no"
+
+  tank:
+    <<: *pre
+    container_name: tank
+    volumes:
+      - .env:/env
+    command: sleep 30
+    restart: "no"
+
+  redis:
+    image: redis:6-alpine
+    container_name: redis
+    restart: always
+    healthcheck:
+      test: [ "CMD", "redis-cli", "ping" ]
+      timeout: 45s
+      interval: 2s
+      retries: 20
+
+  nginx:
+    image: nginx:alpine
+    container_name: nginx
+    restart: always
+
+  latestcontainer:
+    image: httpd:latest
+    container_name: latestcontainer
+    restart: always
+
+  latestcontainer2:
+    image: httpd:latest
+    container_name: latestcontainer2
+    restart: always
